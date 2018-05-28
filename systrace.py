@@ -34,7 +34,8 @@ def parse_args():
 def build_defines(args, pid):
     defines = []
 
-    defines.append("#define FILTER_PID {}".format(pid))
+    if pid is not None:
+        defines.append("#define FILTER_PID {}".format(pid))
 
     if args.stack_traces:
         defines.append("#define FETCH_STACKS 1")
@@ -143,8 +144,14 @@ if __name__ == "__main__":
         exit(1)
 
     args = parse_args()
+
     # gives priority to the `pid` flag
-    tracee_pid = args.pid if args.pid else run_tracee(args.binary)
+    tracee_pid = None
+    if args.pid:
+        tracee_pid = args.pid
+    if args.binary:
+        tracee_pid = run_tracee(args.binary)
+
     defines = build_defines(args, tracee_pid)
 
     bpf = BPF(text=text.replace('DEFINES', defines))
