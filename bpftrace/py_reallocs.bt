@@ -1,0 +1,21 @@
+uprobe:$libpython:PyMem_Malloc {
+  @malloc[tid] = arg0;
+}
+
+uretprobe:$libpython:PyMem_Malloc /@malloc[tid]/ {
+  @allocs[retval] = @malloc[tid];
+}
+
+uprobe:$libpython:PyMem_Realloc /@allocs[arg0]/ {
+  @reallocs = hist(arg1 - @allocs[arg0]);
+}
+
+interval:s:1 {
+  // how can we redraw the buffer in bpftrace?
+  print(@reallocs);
+}
+
+END {
+  clear(@allocs);
+  clear(@malloc);
+}
