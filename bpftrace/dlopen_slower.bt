@@ -1,0 +1,16 @@
+uprobe:/lib64/libc-2.17.so:do_dlopen {
+  @timing[tid] = nsecs;
+  @stacks[tid] = ustack;
+}
+
+uretprobe:/lib64/libc-2.17.so:do_dlopen /@timing[tid]/ {
+  $timing = nsecs - @timing[tid];
+  if ($timing > 100000) { // 0.1ms; 1ms => 1e^6ns
+    printf("[%s] took: %d, stack: %s\n", comm, $timing, @stacks[tid]);
+  }
+}
+
+END {
+  clear(@timing);
+  clear(@stacks);
+}
