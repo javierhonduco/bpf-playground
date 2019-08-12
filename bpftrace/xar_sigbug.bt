@@ -1,0 +1,10 @@
+// #include <signal.h> // does not work in bpftrace v0.9.1 :(
+#define SIGBUS 10
+
+tracepoint:syscalls:sys_enter_umount /"squashfuse_ll" == comm/ {
+  printf("%u umount: %s\n", nsecs, str(args->name));
+}
+
+tracepoint:signal:signal_deliver /SIGBUS == args->sig/ {
+  printf("%u %s SIGBUS\n", nsecs, comm);
+}
