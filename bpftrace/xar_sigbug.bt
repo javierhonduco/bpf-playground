@@ -2,7 +2,7 @@
 #define SIGBUS 10
 
 tracepoint:syscalls:sys_enter_umount /"squashfuse_ll" == comm/ {
-  printf("%u umount: %s\n", nsecs, str(args->name));
+  printf("%u umount: %s %s\n", nsecs, str(args->name), ustack);
 }
 
 tracepoint:signal:signal_deliver /SIGBUS == args->sig/ {
