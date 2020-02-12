@@ -1,0 +1,17 @@
+// Create a Cgroup: sudo mkdir /sys/fs/cgroup/lol.slice
+// Add a shell to a Cgroup: echo $$ | sudo tee > /sys/fs/cgroup/lol.slice/cgroup.procs
+
+uprobe:/usr/local/lib/ld-2.26.so:do_lookup_x /cgroup == cgroupid("/sys/fs/cgroup/lol.slice")/ {
+  @time_before = nsecs
+}
+
+uprobe:/usr/local/lib/ld-2.26.so:do_lookup_x /@time_before != 0 && cgroup == cgroupid("/sys/fs/cgroup/lol.slice")/ {
+  @count += 1; // not using count() for hashtag reasons
+  @total_time = sum(nsecs - @time_before);
+  @time_before = 0;
+}
+
+END {
+    print("# of times this symbol was called and runtime in nanoseconds\n")
+    delete(@time_before);
+}
