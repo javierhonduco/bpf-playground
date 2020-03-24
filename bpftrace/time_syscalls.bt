@@ -1,0 +1,24 @@
+#include <uapi/linux/time.h>
+// https://github.com/torvalds/linux/blob/b0dd1eb220c06892e0a4098378c4296650f3f8db/include/uapi/linux/time.h#L49
+
+tracepoint:syscalls:sys_enter_clock_gettime /args->which_clock == CLOCK_BOOTTIME/ {
+    @gettime_boottime[comm] = count();
+}
+
+tracepoint:syscalls:sys_enter_clock_gettime /args->which_clock != CLOCK_BOOTTIME/ {
+    @gettime_other_clocks[args->which_clock, comm] = count();
+    // printf("[%s] gettime called with clock: %d %s\n", comm, args->which_clock, ustack);
+}
+
+tracepoint:syscalls:sys_enter_gettimeofday {
+    @gettimeofday[comm] = count();
+}
+
+interval:s:60 {
+    exit();
+}
+
+END {
+    printf("Calls in the past 60s:\n");
+    printf("======================\n");
+}
