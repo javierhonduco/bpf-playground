@@ -1,0 +1,5 @@
+# BPFTRACE_STRLEN=140
+
+profile:ms:10 /pid==$PID/ {
+  printf("%s\n", str(curtask->mm->arg_start, curtask->mm->arg_end - curtask->mm->arg_start));
+}
