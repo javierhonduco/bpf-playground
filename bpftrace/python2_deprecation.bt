@@ -1,0 +1,20 @@
+#include <linux/types.h>
+
+struct data {
+    long pad;
+    int filename;
+    pid_t pid;
+    pid_t old_pid;
+}
+
+tracepoint:sched:sched_process_exec /comm == "python" || comm == "python2" || comm == "python2.7"/ {
+    // as per https://github.com/iovisor/bpftrace/issues/999
+    $data = (struct data*)args;
+    $offset = (uint64)($data->filename & 0xFFFF);
+    $length = (uint64)($data->filename >> 16);
+    $base = (uint64)args;
+
+    printf("filename=%s pid=%d cmdline=", str($base + $offset, $length), args->pid);
+    cat("/proc/%d/cmdline", pid);
+    printf("\n");
+}
